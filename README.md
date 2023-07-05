@@ -1,5 +1,5 @@
-# Smiley FTP Backdoor
-### VSFTPD 2.3.4
+# Smile and Wave
+### VSFTPD 2.3.4 smiley face backdoor
 
 This is a recreation of the smiley ftp backdoor.
 
