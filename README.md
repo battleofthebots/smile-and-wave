@@ -16,7 +16,7 @@ docker build . -t smiley
 
 ## Running
 ```sh
-docker run -p 21:21 -p 6200:6200 smiley
+docker run --cpus=1 -p 21:21 -p 6200:6200 smiley
 ```
 
 ## Exploiting
