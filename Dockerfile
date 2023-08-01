@@ -7,7 +7,7 @@ RUN apt-get update &&\
 COPY vsftpd-2.3.4.tar.gz vsftpd-2.3.4.tar.gz
 COPY smiley.patch smiley.patch
 RUN tar -xvf vsftpd-2.3.4.tar.gz && patch -s -p0 < smiley.patch
-WORKDIR vsftpd-2.3.4
+WORKDIR /vsftpd-2.3.4
 RUN make
 
 # Run
