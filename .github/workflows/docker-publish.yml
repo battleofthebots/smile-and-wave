@@ -110,7 +110,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: extract-binary
-        run: ID=$(docker create ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest) && docker cp $IP:/sbin/vsftpd vsftpd && docker rm $ID
+        run: ID=$(docker create ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest) && docker cp $ID:/sbin/vsftpd vsftpd && docker rm $ID
 
       - name: create archive
         run: tar -czf smile-and-wave.tar.gz vsftpd smiley.patch
