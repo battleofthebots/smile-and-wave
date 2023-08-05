@@ -11,7 +11,8 @@ WORKDIR /vsftpd-2.3.4
 RUN make
 
 # Run
-FROM ghcr.io/battleofthebots/botb-base-image:ubuntu-defcon-2023
+FROM ghcr.io/battleofthebots/botb-base-image:latest
+
 RUN apt-get update &&\
     apt-get install -y libcap2
 COPY --from=builder /vsftpd-2.3.4/vsftpd /sbin/vsftpd
